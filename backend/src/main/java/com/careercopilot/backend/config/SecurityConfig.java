@@ -25,10 +25,9 @@ public class SecurityConfig {
                     return config;
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/health", "/api/status").permitAll()
+                        .requestMatchers("/health", "/api/status", "/api/resumes/**").permitAll()
                         .anyRequest().authenticated()
                 );
-
         return http.build();
     }
 }

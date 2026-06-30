@@ -1,0 +1,309 @@
+<main class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">CC</span>
+      <div>
+        <h1>Career Copilot</h1>
+        <p>{{ backendStatus }}</p>
+      </div>
+    </div>
+
+    <nav class="nav-list" aria-label="Career Copilot sections">
+      @for (section of sections; track section.id) {
+        <button class="nav-item" type="button" [class.active]="activeSection === section.id" (click)="setActiveSection(section.id)">
+          {{ section.label }}
+        </button>
+      }
+    </nav>
+
+    <button class="logout-button" type="button" (click)="logout()">Logout</button>
+  </aside>
+
+  <section class="main-area">
+    <header class="hero-card">
+      <div>
+        <p class="eyebrow">AI career growth workspace</p>
+        <h2>Career Copilot</h2>
+        <span>Upload resumes, match jobs, analyze gaps, and prepare for interviews in one pastel-powered dashboard.</span>
+      </div>
+      <button class="primary-button hero-action" type="button" (click)="setActiveSection('job-match')">
+        Analyze Job Match
+      </button>
+    </header>
+
+    @if (activeSection === 'dashboard') {
+      <section class="section-stack">
+        <div class="stats-grid">
+          <article class="stat-card lavender"><span>Uploaded Resumes</span><strong>{{ resumes.length }}</strong></article>
+          <article class="stat-card blush"><span>Latest ATS Score</span><strong>{{ latestAtsScore }}</strong></article>
+          <article class="stat-card blue"><span>Latest Job Match</span><strong>{{ latestMatchScore }}</strong></article>
+          <article class="stat-card mint"><span>Missing Skills</span><strong>{{ missingSkillsCount }}</strong></article>
+          <article class="stat-card cream"><span>Interview Readiness</span><strong>{{ interviewReadiness }}</strong></article>
+        </div>
+
+        <article class="panel action-panel">
+          <div class="panel-heading">
+            <p>Next recommended action</p>
+            <h3>{{ nextRecommendedAction }}</h3>
+          </div>
+          <div class="quick-actions">
+            <button class="ghost-button" type="button" (click)="setActiveSection('resume-manager')">Manage Resumes</button>
+            <button class="ghost-button" type="button" (click)="setActiveSection('job-match')">Run Job Match</button>
+            <button class="ghost-button" type="button" (click)="setActiveSection('interview-prep')">Practice Interview</button>
+          </div>
+        </article>
+
+        <section class="dashboard-preview">
+          <article class="panel">
+            <div class="panel-heading">
+              <p>Recent resume library</p>
+              <h3>{{ resumes.length ? resumes[0].fileName : 'No resume uploaded yet' }}</h3>
+            </div>
+            <p class="soft-text">
+              {{ resumes.length ? 'Your latest resume is ready for job matching and analysis.' : 'Upload a resume to unlock ATS scoring, skill gaps, and interview prep.' }}
+            </p>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading">
+              <p>Current focus</p>
+              <h3>{{ analysisResult ? 'Review skill gaps and tailored resume' : 'Run your first job match' }}</h3>
+            </div>
+            <p class="soft-text">
+              {{ analysisResult ? 'Use the roadmap and interview sections to close the gap.' : 'Paste a job description to generate scores and recommendations.' }}
+            </p>
+          </article>
+        </section>
+      </section>
+    }
+
+    @if (activeSection === 'resume-manager') {
+      <section class="workspace-grid">
+        <article class="panel upload-panel">
+          <div class="panel-heading">
+            <p>Resume Upload</p>
+            <h3>Add your latest resume</h3>
+          </div>
+
+          <label class="upload-box">
+            <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.txt">
+            <span class="upload-icon">+</span>
+            <strong>{{ selectedFile ? selectedFile.name : 'Choose resume file' }}</strong>
+            <small>PDF, DOCX, DOC, or TXT</small>
+          </label>
+
+          <button class="primary-button" type="button" (click)="uploadResume()">Upload Resume</button>
+
+          @if (uploadMessage) {
+            <p class="notice success-notice">{{ uploadMessage }}</p>
+          }
+        </article>
+
+        <article class="panel library-panel">
+          <div class="panel-heading split-heading">
+            <div>
+              <p>Resume Library</p>
+              <h3>Uploaded resumes</h3>
+            </div>
+            <button class="ghost-button" type="button" (click)="loadResumes()">Refresh</button>
+          </div>
+
+          @if (resumeError) {
+            <p class="notice error-notice">{{ resumeError }}</p>
+          }
+
+          @if (isLoadingResumes) {
+            <div class="empty-state"><strong>Loading resumes...</strong><span>Your library will appear here in a moment.</span></div>
+          } @else if (resumes.length === 0) {
+            <div class="empty-state"><strong>No resumes uploaded yet</strong><span>Upload your first resume to begin building your career workspace.</span></div>
+          } @else {
+            <div class="table-shell">
+              <table class="resume-table">
+                <thead>
+                  <tr><th>ID</th><th>File Name</th><th>File Type</th><th>File Size</th><th>Uploaded At</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                  @for (resume of resumes; track resume.id) {
+                    <tr>
+                      <td>#{{ resume.id }}</td>
+                      <td class="file-name">{{ resume.fileName }}</td>
+                      <td>{{ resume.fileType || 'Unknown' }}</td>
+                      <td>{{ formatFileSize(resume.fileSize) }}</td>
+                      <td>{{ formatUploadDate(resume.uploadedAt) }}</td>
+                      <td>
+                        <button class="delete-button" type="button" [disabled]="deletingResumeId === resume.id" (click)="deleteResume(resume)">
+                          {{ deletingResumeId === resume.id ? 'Deleting...' : 'Delete' }}
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </article>
+      </section>
+    }
+
+    @if (activeSection === 'job-match') {
+      <section class="panel">
+        <div class="panel-heading">
+          <p>Job Match</p>
+          <h3>Compare your resume with a job description</h3>
+        </div>
+
+        <div class="analysis-form">
+          <label class="field">
+            <span>Select resume</span>
+            <select [value]="selectedResumeId || ''" (change)="onResumeSelected($event)">
+              <option value="">Choose an uploaded resume</option>
+              @for (resume of resumes; track resume.id) {
+                <option [value]="resume.id">{{ resume.fileName }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Paste job description</span>
+            <textarea [value]="jobDescription" (input)="onJobDescriptionInput($event)" placeholder="Paste responsibilities, required skills, tools, and keywords."></textarea>
+          </label>
+
+          <button class="primary-button analyze-button" type="button" [disabled]="isAnalyzing" (click)="analyzeJobMatch()">
+            {{ isAnalyzing ? 'Analyzing Match...' : 'Analyze Match' }}
+          </button>
+        </div>
+
+        @if (analysisError) {
+          <p class="notice error-notice">{{ analysisError }}</p>
+        }
+
+        @if (isAnalyzing) {
+          <div class="empty-state analysis-loading"><strong>Analyzing your resume match...</strong><span>Career Copilot is comparing ATS fit, keywords, skills, and interview focus areas.</span></div>
+        }
+
+        @if (analysisResult) {
+          <section class="results-grid">
+            <article class="score-card blush"><span>ATS Score</span><strong>{{ analysisResult.atsScore }}%</strong></article>
+            <article class="score-card blue"><span>Job Match Score</span><strong>{{ analysisResult.jobMatchScore }}%</strong></article>
+            <article class="result-card">
+              <h3>Matched Skills</h3>
+              <div class="chips">
+                @for (skill of analysisResult.matchedSkills; track skill) {
+                  <span class="chip good">{{ skill }}</span>
+                } @empty {
+                  <span class="soft-text">No matched skills returned yet.</span>
+                }
+              </div>
+            </article>
+            <article class="result-card">
+              <h3>Missing Skills</h3>
+              <div class="chips">
+                @for (skill of analysisResult.missingSkills; track skill) {
+                  <span class="chip warn">{{ skill }}</span>
+                } @empty {
+                  <span class="soft-text">No major missing skills found.</span>
+                }
+              </div>
+            </article>
+          </section>
+        }
+      </section>
+    }
+
+    @if (activeSection === 'resume-analysis') {
+      <section class="panel">
+        <div class="panel-heading"><p>Resume Analysis</p><h3>Tailored resume review</h3></div>
+        @if (analysisResult) {
+          <div class="results-grid">
+            <article class="score-card blush"><span>ATS Score</span><strong>{{ analysisResult.atsScore }}%</strong></article>
+            <article class="result-card">
+              <h3>Improvement Suggestions</h3>
+              <ul>
+                @for (suggestion of analysisResult.improvementSuggestions; track suggestion) {
+                  <li>{{ suggestion }}</li>
+                }
+              </ul>
+            </article>
+            <article class="result-card wide-card">
+              <h3>Recommended Keywords</h3>
+              <div class="chips">
+                @for (keyword of analysisResult.recommendedKeywords; track keyword) {
+                  <span class="chip keyword">{{ keyword }}</span>
+                }
+              </div>
+            </article>
+            <article class="result-card wide-card"><h3>Refined Resume Version</h3><pre>{{ analysisResult.refinedResume }}</pre></article>
+          </div>
+        } @else {
+          <div class="empty-state"><strong>No resume analysis yet</strong><span>Run Job Match first to generate ATS feedback and a refined resume version.</span></div>
+        }
+      </section>
+    }
+
+    @if (activeSection === 'skill-roadmap') {
+      <section class="panel">
+        <div class="panel-heading"><p>Skill Roadmap</p><h3>Close the gaps for your target role</h3></div>
+        @if (analysisResult) {
+          <div class="results-grid">
+            <article class="result-card">
+              <h3>Missing Skills</h3>
+              <div class="chips">
+                @for (skill of analysisResult.missingSkills; track skill) {
+                  <span class="chip warn">{{ skill }}</span>
+                } @empty {
+                  <span class="soft-text">No missing skills found.</span>
+                }
+              </div>
+            </article>
+            <article class="result-card">
+              <h3>Learning Roadmap</h3>
+              <div class="roadmap-list">
+                @for (item of analysisResult.learningRoadmap; track item.skill) {
+                  <section class="roadmap-item">
+                    <h4>{{ item.skill }}</h4>
+                    <p>{{ item.whyImportant }}</p>
+                    <ol>
+                      @for (step of item.learningSteps; track step) {
+                        <li>{{ step }}</li>
+                      }
+                    </ol>
+                  </section>
+                }
+              </div>
+            </article>
+          </div>
+        } @else {
+          <div class="empty-state"><strong>No roadmap yet</strong><span>Analyze a job match to generate missing skills and learning steps.</span></div>
+        }
+      </section>
+    }
+
+    @if (activeSection === 'interview-prep') {
+      <section class="panel">
+        <div class="panel-heading"><p>Interview Prep</p><h3>Practice questions from your resume and target job</h3></div>
+        @if (analysisResult) {
+          <div class="results-grid">
+            <article class="result-card">
+              <h3>Technical Questions</h3>
+              <ul>
+                @for (question of analysisResult.technicalQuestions; track question) {
+                  <li>{{ question }}</li>
+                }
+              </ul>
+            </article>
+            <article class="result-card">
+              <h3>Behavioral Questions</h3>
+              <ul>
+                @for (question of analysisResult.behavioralQuestions; track question) {
+                  <li>{{ question }}</li>
+                }
+              </ul>
+            </article>
+          </div>
+        } @else {
+          <div class="empty-state"><strong>No interview set yet</strong><span>Run Job Match to generate technical and behavioral questions.</span></div>
+        }
+      </section>
+    }
+  </section>
+</main>

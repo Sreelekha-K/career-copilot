@@ -1,0 +1,32 @@
+<main class="auth-page">
+  <section class="auth-card">
+    <div class="brand-pill">Career Copilot</div>
+    <h1>Welcome back</h1>
+    <p>Sign in to continue your AI-powered career workspace.</p>
+
+    <form class="auth-form" (submit)="$event.preventDefault(); login()">
+      <label>
+        <span>Email</span>
+        <input type="email" autocomplete="email" [value]="email" (input)="onEmailInput($event)" placeholder="you@example.com">
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input type="password" autocomplete="current-password" [value]="password" (input)="onPasswordInput($event)" placeholder="Your password">
+      </label>
+
+      @if (errorMessage) {
+        <p class="auth-error">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Signing in...' : 'Login' }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      New to Career Copilot?
+      <a routerLink="/register">Create an account</a>
+    </p>
+  </section>
+</main>

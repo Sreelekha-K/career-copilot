@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16
-    container_name: career-copilot-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: career_copilot
       POSTGRES_USER: postgres
@@ -10,6 +10,42 @@ services:
       - "5432:5432"
     volumes:
       - career_copilot_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d career_copilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/career_copilot?options=-c%20TimeZone=UTC
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      RESUME_UPLOAD_DIR: /app/uploads/resumes
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-career-copilot-local-dev-jwt-secret-change-me}
+    ports:
+      - "8080:8080"
+    volumes:
+      - career_copilot_uploads:/app/uploads/resumes
+
+  frontend:
+    build:
+      context: ../frontend/career-copilot-ui
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
 
 volumes:
   career_copilot_data:
+  career_copilot_uploads:

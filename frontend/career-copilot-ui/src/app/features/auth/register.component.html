@@ -1,0 +1,37 @@
+<main class="auth-page">
+  <section class="auth-card">
+    <div class="brand-pill">Career Copilot</div>
+    <h1>Create your account</h1>
+    <p>Start managing resumes, job matches, roadmaps, and interview prep.</p>
+
+    <form class="auth-form" (submit)="$event.preventDefault(); register()">
+      <label>
+        <span>Name</span>
+        <input type="text" autocomplete="name" [value]="name" (input)="onNameInput($event)" placeholder="Your name">
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input type="email" autocomplete="email" [value]="email" (input)="onEmailInput($event)" placeholder="you@example.com">
+      </label>
+
+      <label>
+        <span>Password</span>
+        <input type="password" autocomplete="new-password" [value]="password" (input)="onPasswordInput($event)" placeholder="Create a password">
+      </label>
+
+      @if (errorMessage) {
+        <p class="auth-error">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Creating account...' : 'Register' }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      Already have an account?
+      <a routerLink="/login">Login</a>
+    </p>
+  </section>
+</main>

@@ -8,6 +8,10 @@ public class ResumeResponseDto {
     private String fileName;
     private String fileType;
     private LocalDateTime uploadedAt;
+    private Long fileSize;
+    private String filePath;
+    private String resumeTextPreview;
+    private String parsedTextPreview;
 
     public Long getId() {
         return id;
@@ -39,5 +43,37 @@ public class ResumeResponseDto {
 
     public void setUploadedAt(LocalDateTime uploadedAt) {
         this.uploadedAt = uploadedAt;
+    }
+
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public String getResumeTextPreview() {
+        return resumeTextPreview;
+    }
+
+    public void setResumeTextPreview(String resumeTextPreview) {
+        this.resumeTextPreview = resumeTextPreview;
+    }
+
+    public String getParsedTextPreview() {
+        return parsedTextPreview;
+    }
+
+    public void setParsedTextPreview(String parsedTextPreview) {
+        this.parsedTextPreview = parsedTextPreview;
     }
 }

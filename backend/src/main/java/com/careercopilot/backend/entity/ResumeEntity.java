@@ -1,6 +1,12 @@
 package com.careercopilot.backend.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,6 +22,13 @@ public class ResumeEntity {
     private String fileType;
 
     private LocalDateTime uploadedAt;
+
+    private Long fileSize;
+
+    private String filePath;
+
+    @Column(name = "resume_text", columnDefinition = "TEXT")
+    private String resumeText;
 
     public ResumeEntity() {
     }
@@ -42,6 +55,22 @@ public class ResumeEntity {
         return uploadedAt;
     }
 
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public String getResumeText() {
+        return resumeText;
+    }
+
+    public String getParsedText() {
+        return resumeText;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -56,5 +85,21 @@ public class ResumeEntity {
 
     public void setUploadedAt(LocalDateTime uploadedAt) {
         this.uploadedAt = uploadedAt;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public void setResumeText(String resumeText) {
+        this.resumeText = resumeText;
+    }
+
+    public void setParsedText(String parsedText) {
+        this.resumeText = parsedText;
     }
 }

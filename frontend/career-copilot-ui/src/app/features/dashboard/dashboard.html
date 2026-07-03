@@ -4,26 +4,35 @@
       <span class="brand-mark">CC</span>
       <div>
         <h1>Career Copilot</h1>
-        <p>{{ backendStatus }}</p>
+        <p>{{ userName ? 'Hello, ' + userName : 'AI career workspace' }}</p>
       </div>
+    </div>
+
+    <div class="sidebar-status">
+      <span class="status-dot"></span>
+      <span>{{ backendStatus }}</span>
     </div>
 
     <nav class="nav-list" aria-label="Career Copilot sections">
       @for (section of sections; track section.id) {
         <button class="nav-item" type="button" [class.active]="activeSection === section.id" (click)="setActiveSection(section.id)">
-          {{ section.label }}
+          <span class="nav-icon" aria-hidden="true">{{ section.icon }}</span>
+          <span>{{ section.label }}</span>
         </button>
       }
     </nav>
 
-    <button class="logout-button" type="button" (click)="logout()">Logout</button>
+    <button class="logout-button" type="button" (click)="logout()">
+      <span class="nav-icon" aria-hidden="true">L</span>
+      <span>Logout</span>
+    </button>
   </aside>
 
   <section class="main-area">
     <header class="hero-card">
       <div>
         <p class="eyebrow">AI career growth workspace</p>
-        <h2>Career Copilot</h2>
+        <h2>{{ welcomeMessage }}</h2>
         <span>Upload resumes, match jobs, analyze gaps, and prepare for interviews in one pastel-powered dashboard.</span>
       </div>
       <button class="primary-button hero-action" type="button" (click)="setActiveSection('job-match')">
@@ -34,11 +43,11 @@
     @if (activeSection === 'dashboard') {
       <section class="section-stack">
         <div class="stats-grid">
-          <article class="stat-card lavender"><span>Uploaded Resumes</span><strong>{{ resumes.length }}</strong></article>
-          <article class="stat-card blush"><span>Latest ATS Score</span><strong>{{ latestAtsScore }}</strong></article>
-          <article class="stat-card blue"><span>Latest Job Match</span><strong>{{ latestMatchScore }}</strong></article>
-          <article class="stat-card mint"><span>Missing Skills</span><strong>{{ missingSkillsCount }}</strong></article>
-          <article class="stat-card cream"><span>Interview Readiness</span><strong>{{ interviewReadiness }}</strong></article>
+          <article class="stat-card lavender"><span class="stat-icon">R</span><span>Uploaded Resumes</span><strong>{{ resumes.length }}</strong></article>
+          <article class="stat-card blush"><span class="stat-icon">A</span><span>Latest ATS Score</span><strong>{{ latestAtsScore }}</strong></article>
+          <article class="stat-card blue"><span class="stat-icon">M</span><span>Latest Job Match</span><strong>{{ latestMatchScore }}</strong></article>
+          <article class="stat-card mint"><span class="stat-icon">S</span><span>Missing Skills</span><strong>{{ missingSkillsCount }}</strong></article>
+          <article class="stat-card cream"><span class="stat-icon">I</span><span>Interview Readiness</span><strong>{{ interviewReadiness }}</strong></article>
         </div>
 
         <article class="panel action-panel">
@@ -87,7 +96,7 @@
 
           <label class="upload-box">
             <input type="file" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.txt">
-            <span class="upload-icon">+</span>
+            <span class="upload-icon">↑</span>
             <strong>{{ selectedFile ? selectedFile.name : 'Choose resume file' }}</strong>
             <small>PDF, DOCX, DOC, or TXT</small>
           </label>
@@ -186,7 +195,7 @@
             <article class="score-card blush"><span>ATS Score</span><strong>{{ analysisResult.atsScore }}%</strong></article>
             <article class="score-card blue"><span>Job Match Score</span><strong>{{ analysisResult.jobMatchScore }}%</strong></article>
             <article class="result-card">
-              <h3>Matched Skills</h3>
+              <h3><span class="heading-icon">M</span>Matched Skills</h3>
               <div class="chips">
                 @for (skill of analysisResult.matchedSkills; track skill) {
                   <span class="chip good">{{ skill }}</span>
@@ -196,7 +205,7 @@
               </div>
             </article>
             <article class="result-card">
-              <h3>Missing Skills</h3>
+              <h3><span class="heading-icon">S</span>Missing Skills</h3>
               <div class="chips">
                 @for (skill of analysisResult.missingSkills; track skill) {
                   <span class="chip warn">{{ skill }}</span>
@@ -217,7 +226,7 @@
           <div class="results-grid">
             <article class="score-card blush"><span>ATS Score</span><strong>{{ analysisResult.atsScore }}%</strong></article>
             <article class="result-card">
-              <h3>Improvement Suggestions</h3>
+              <h3><span class="heading-icon">A</span>Improvement Suggestions</h3>
               <ul>
                 @for (suggestion of analysisResult.improvementSuggestions; track suggestion) {
                   <li>{{ suggestion }}</li>
@@ -225,14 +234,14 @@
               </ul>
             </article>
             <article class="result-card wide-card">
-              <h3>Recommended Keywords</h3>
+              <h3><span class="heading-icon">K</span>Recommended Keywords</h3>
               <div class="chips">
                 @for (keyword of analysisResult.recommendedKeywords; track keyword) {
                   <span class="chip keyword">{{ keyword }}</span>
                 }
               </div>
             </article>
-            <article class="result-card wide-card"><h3>Refined Resume Version</h3><pre>{{ analysisResult.refinedResume }}</pre></article>
+            <article class="result-card wide-card"><h3><span class="heading-icon">R</span>Refined Resume Version</h3><pre>{{ analysisResult.refinedResume }}</pre></article>
           </div>
         } @else {
           <div class="empty-state"><strong>No resume analysis yet</strong><span>Run Job Match first to generate ATS feedback and a refined resume version.</span></div>
@@ -246,7 +255,7 @@
         @if (analysisResult) {
           <div class="results-grid">
             <article class="result-card">
-              <h3>Missing Skills</h3>
+              <h3><span class="heading-icon">S</span>Missing Skills</h3>
               <div class="chips">
                 @for (skill of analysisResult.missingSkills; track skill) {
                   <span class="chip warn">{{ skill }}</span>
@@ -256,7 +265,7 @@
               </div>
             </article>
             <article class="result-card">
-              <h3>Learning Roadmap</h3>
+              <h3><span class="heading-icon">L</span>Learning Roadmap</h3>
               <div class="roadmap-list">
                 @for (item of analysisResult.learningRoadmap; track item.skill) {
                   <section class="roadmap-item">
@@ -284,7 +293,7 @@
         @if (analysisResult) {
           <div class="results-grid">
             <article class="result-card">
-              <h3>Technical Questions</h3>
+              <h3><span class="heading-icon">T</span>Technical Questions</h3>
               <ul>
                 @for (question of analysisResult.technicalQuestions; track question) {
                   <li>{{ question }}</li>
@@ -292,7 +301,7 @@
               </ul>
             </article>
             <article class="result-card">
-              <h3>Behavioral Questions</h3>
+              <h3><span class="heading-icon">B</span>Behavioral Questions</h3>
               <ul>
                 @for (question of analysisResult.behavioralQuestions; track question) {
                   <li>{{ question }}</li>

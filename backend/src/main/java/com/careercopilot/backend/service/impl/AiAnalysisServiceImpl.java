@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 import java.util.Map;
@@ -19,8 +20,10 @@ import java.util.Map;
 public class AiAnalysisServiceImpl implements AiAnalysisService {
 
     private static final int MAX_RESUME_CHARS = 14000;
+    private static final int[] GEMINI_RETRY_DELAYS_MS = {2000, 5000, 10000};
+    private static final String GEMINI_BUSY_MESSAGE = "Gemini is temporarily busy. Please try again in a minute.";
     private static final String GEMINI_API_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
@@ -44,12 +47,7 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
         try {
             Map<String, Object> requestBody = buildGeminiRequest(resume, jobDescription);
 
-            JsonNode response = restClient.post()
-                    .uri(GEMINI_API_URL)
-                    .header("x-goog-api-key", apiKey)
-                    .body(requestBody)
-                    .retrieve()
-                    .body(JsonNode.class);
+            JsonNode response = sendGeminiRequestWithRetry(requestBody);
 
             String responseText = extractGeminiText(response);
             String json = stripJsonFences(responseText);
@@ -63,6 +61,8 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
             System.err.println("Gemini parse error class: " + ex.getClass().getName());
             System.err.println("Gemini parse error message: " + ex.getMessage());
             throw new AiAnalysisException("Gemini returned an invalid analysis format", ex);
+        } catch (AiAnalysisException ex) {
+            throw ex;
         } catch (Exception ex) {
             System.err.println("Gemini analysis request failed.");
             System.err.println("Gemini error class: " + ex.getClass().getName());
@@ -87,6 +87,66 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
                         "responseMimeType", "application/json"
                 )
         );
+    }
+
+    private JsonNode sendGeminiRequestWithRetry(Map<String, Object> requestBody) {
+
+        for (int attempt = 0; attempt <= GEMINI_RETRY_DELAYS_MS.length; attempt++) {
+            try {
+                return restClient.post()
+                        .uri(GEMINI_API_URL)
+                        .header("x-goog-api-key", apiKey)
+                        .body(requestBody)
+                        .retrieve()
+                        .body(JsonNode.class);
+            } catch (RestClientResponseException ex) {
+                if (!isGeminiUnavailable(ex)) {
+                    throw ex;
+                }
+
+                logGeminiUnavailable(attempt, ex);
+
+                if (attempt == GEMINI_RETRY_DELAYS_MS.length) {
+                    throw new AiAnalysisException(GEMINI_BUSY_MESSAGE, ex);
+                }
+
+                sleepBeforeRetry(GEMINI_RETRY_DELAYS_MS[attempt]);
+            }
+        }
+
+        throw new AiAnalysisException(GEMINI_BUSY_MESSAGE);
+    }
+
+    private boolean isGeminiUnavailable(RestClientResponseException ex) {
+
+        String responseBody = ex.getResponseBodyAsString();
+        String responseBodyLower = responseBody == null ? "" : responseBody.toLowerCase();
+
+        return ex.getStatusCode().value() == 503
+                || responseBodyLower.contains("unavailable")
+                || responseBodyLower.contains("currently experiencing high demand")
+                || responseBodyLower.contains("please try again later");
+    }
+
+    private void logGeminiUnavailable(int attempt, RestClientResponseException ex) {
+
+        System.err.println("Gemini unavailable response received.");
+        System.err.println("Gemini model: gemini-2.5-flash");
+        System.err.println("Gemini attempt: " + (attempt + 1));
+        System.err.println("Gemini status: " + ex.getStatusCode());
+        System.err.println("Gemini error class: " + ex.getClass().getName());
+        System.err.println("Gemini error message: " + ex.getMessage());
+        System.err.println("Gemini response body: " + ex.getResponseBodyAsString());
+    }
+
+    private void sleepBeforeRetry(int delayMs) {
+
+        try {
+            Thread.sleep(delayMs);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new AiAnalysisException("Gemini analysis was interrupted. Please try again.", ex);
+        }
     }
 
     private String buildPrompt(ResumeEntity resume, String jobDescription) {

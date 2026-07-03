@@ -20,7 +20,6 @@ RUN mkdir -p /app/uploads/resumes && chown -R appuser:appgroup /app
 
 USER appuser
 
-ENV SERVER_PORT=8080
 ENV RESUME_UPLOAD_DIR=/app/uploads/resumes
 
 EXPOSE 8080

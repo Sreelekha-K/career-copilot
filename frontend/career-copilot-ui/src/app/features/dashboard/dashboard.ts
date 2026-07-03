@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { AnalysisStateService } from '../../core/services/analysis-state.service';
 import { Api, JobAnalysisResponse, Resume } from '../../core/services/api';
 
 type DashboardSection =
@@ -32,18 +33,19 @@ export class DashboardComponent implements OnInit {
   analysisError = '';
   activeSection: DashboardSection = 'dashboard';
 
-  readonly sections: { id: DashboardSection; label: string }[] = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'resume-manager', label: 'Resume Manager' },
-    { id: 'job-match', label: 'Job Match' },
-    { id: 'resume-analysis', label: 'Resume Analysis' },
-    { id: 'skill-roadmap', label: 'Skill Roadmap' },
-    { id: 'interview-prep', label: 'Interview Prep' }
+  readonly sections: { id: DashboardSection; label: string; icon: string }[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: 'D' },
+    { id: 'resume-manager', label: 'Resume Manager', icon: 'R' },
+    { id: 'job-match', label: 'Job Match', icon: 'M' },
+    { id: 'resume-analysis', label: 'Resume Analysis', icon: 'A' },
+    { id: 'skill-roadmap', label: 'Skill Roadmap', icon: 'S' },
+    { id: 'interview-prep', label: 'Interview Prep', icon: 'I' }
   ];
 
   constructor(
     private apiService: Api,
     private authService: AuthService,
+    private analysisStateService: AnalysisStateService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -51,6 +53,14 @@ export class DashboardComponent implements OnInit {
 
   get latestAtsScore(): string {
     return this.analysisResult ? `${this.analysisResult.atsScore}%` : 'Pending';
+  }
+
+  get userName(): string {
+    return this.authService.getCurrentUser()?.name?.trim() || '';
+  }
+
+  get welcomeMessage(): string {
+    return this.userName ? `Welcome back, ${this.userName}` : 'Welcome back';
   }
 
   get latestMatchScore(): string {
@@ -90,6 +100,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.syncSectionFromRoute();
+    this.analysisResult = this.analysisStateService.getLatestAnalysis();
 
     this.apiService.getBackendStatus().subscribe({
       next: (response) => {
@@ -183,6 +194,7 @@ export class DashboardComponent implements OnInit {
         if (this.selectedResumeId === resume.id) {
           this.selectedResumeId = null;
           this.analysisResult = null;
+          this.analysisStateService.clearAnalysis();
         }
 
         this.deletingResumeId = null;
@@ -221,7 +233,6 @@ export class DashboardComponent implements OnInit {
 
     this.isAnalyzing = true;
     this.analysisError = '';
-    this.analysisResult = null;
 
     this.apiService.analyzeJobMatch({
       resumeId: this.selectedResumeId,
@@ -229,13 +240,17 @@ export class DashboardComponent implements OnInit {
     }).subscribe({
       next: (response) => {
         this.analysisResult = response;
+        this.analysisStateService.saveAnalysis(response);
         this.isAnalyzing = false;
         this.setActiveSection('job-match');
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error(error);
-        this.analysisError = error?.error?.message || 'Could not analyze resume match';
+        const backendMessage = error?.error?.message;
+        this.analysisError = backendMessage === 'Gemini is temporarily busy. Please try again in a minute.'
+          ? 'AI service is busy right now. Please try again shortly.'
+          : backendMessage || 'Could not analyze resume match';
         this.isAnalyzing = false;
         this.cdr.detectChanges();
       }

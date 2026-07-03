@@ -13,5 +13,11 @@
 .DS_Store
 Thumbs.db
 
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
 # Uploads
 uploads/

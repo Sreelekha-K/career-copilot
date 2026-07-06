@@ -1,348 +1,367 @@
-# Career Copilot
+# 🚀 Career Copilot
 
-Career Copilot is an AI-powered career growth dashboard for software engineers. It supports resume upload, resume parsing, JWT authentication, AI job match analysis, ATS scoring, skill roadmaps, and interview preparation.
+> **AI-powered Resume Optimization Platform that helps job seekers land more interviews by tailoring resumes for every job description.**
 
-## Tech Stack
+Career Copilot bridges the gap between **job seekers** and **Applicant Tracking Systems (ATS)**.
 
-Backend:
-- Java 21
-- Spring Boot 3
-- Spring Security with JWT
-- Spring Data JPA
-- PostgreSQL
-- Maven
+Instead of applying to every company with the same resume, users can upload their resume, paste a job description, and receive AI-powered resume improvements tailored specifically for that role.
 
-Frontend:
-- Angular standalone components
-- TypeScript
-- HttpClient
-- Nginx for production Docker serving
+Unlike traditional job portals such as LinkedIn or Naukri that help users **find jobs**, Career Copilot helps users **increase their chances of getting shortlisted**.
 
-Database:
-- PostgreSQL 16
+---
 
-## Project Structure
+## ✨ Features
+
+### 🤖 AI Resume Optimization
+
+* Upload Resume (PDF/DOCX)
+* Paste Job Description
+* AI-powered Resume Analysis
+* ATS Keyword Suggestions
+* Resume Refinement
+* Optimized Resume Preview
+
+### 🔐 Authentication
+
+* User Registration
+* Secure Login
+* JWT Authentication
+* Spring Security
+
+### 📄 Resume Management
+
+* Resume Upload
+* Resume History
+* Resume Parsing
+* Resume Storage
+
+### 📊 ATS Analysis
+
+* ATS Score
+* Resume Match %
+* Missing Keywords
+* Skills Gap Analysis
+
+### 💼 Career Growth
+
+* Interview Preparation
+* Personalized Skill Suggestions
+* Career Roadmap
+* AI Recommendations
+
+---
+
+
+# 🛠 Tech Stack
+
+## Backend
+
+* Java 21
+* Spring Boot 3
+* Spring Security
+* JWT Authentication
+* Spring Data JPA
+* Hibernate
+* PostgreSQL
+* Maven
+
+---
+
+## Frontend
+
+* Angular 20
+* Standalone Components
+* TypeScript
+* RxJS
+* Angular Router
+* HttpClient
+* CSS
+* Responsive UI
+
+---
+
+## AI
+
+* Google Gemini API
+* Resume Parsing
+* ATS Analysis
+* Prompt Engineering
+
+---
+
+## DevOps
+
+* Docker
+* Docker Compose
+* Nginx
+* GitHub
+
+---
+
+# 🏗 Project Architecture
 
 ```text
 career-copilot/
-  backend/
-    Dockerfile
-    pom.xml
-    src/
-  frontend/
-    career-copilot-ui/
-      Dockerfile
-      nginx.conf
-      package.json
-      src/
-  docker-compose.yml
+
+├── backend/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── entity/
+│   ├── dto/
+│   ├── security/
+│   ├── config/
+│   └── exception/
+│
+├── frontend/
+│   └── career-copilot-ui/
+│       ├── src/
+│       ├── assets/
+│       ├── environments/
+│       └── app/
+│
+├── docker-compose.yml
+└── README.md
 ```
 
-## Required Environment Variables
+---
 
-For local Docker Compose, these are the important environment variables:
+# ⚙ Environment Variables
 
-```text
-GEMINI_API_KEY       Required for AI resume/job analysis
-JWT_SECRET           Recommended for stable JWT signing
+| Variable                   | Description             |
+| -------------------------- | ----------------------- |
+| GEMINI_API_KEY             | Google Gemini API Key   |
+| JWT_SECRET                 | Secret Key for JWT      |
+| SPRING_DATASOURCE_URL      | PostgreSQL URL          |
+| SPRING_DATASOURCE_USERNAME | Database Username       |
+| SPRING_DATASOURCE_PASSWORD | Database Password       |
+| RESUME_UPLOAD_DIR          | Resume Upload Directory |
+
+---
+
+# 🚀 Running Locally
+
+## Clone Repository
+
+```bash
+git clone https://github.com/<your-username>/career-copilot.git
+
+cd career-copilot
 ```
 
-The Compose file already provides database defaults:
+---
 
-```text
-SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/career_copilot?options=-c%20TimeZone=UTC
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=postgres
-RESUME_UPLOAD_DIR=/app/uploads/resumes
+## Backend
+
+```bash
+cd backend
+
+mvn clean install
+
+mvn spring-boot:run
 ```
 
-Set optional secrets in PowerShell before starting Docker:
+---
 
-```powershell
-$env:GEMINI_API_KEY="your-gemini-api-key"
-$env:JWT_SECRET="replace-with-a-long-secure-secret"
-```
+## Frontend
 
-## Build Commands
+```bash
+cd frontend/career-copilot-ui
 
-Backend local build:
-
-```powershell
-cd C:\projects\career-copilot\backend
-mvn clean package -DskipTests
-```
-
-If Maven is not installed globally, use Docker Compose build instead.
-
-Frontend local build:
-
-```powershell
-cd C:\projects\career-copilot\frontend\career-copilot-ui
 npm install
-npm run build
+
+ng serve
 ```
 
-## Docker Commands
+---
 
-Build backend image:
+## Docker
 
-```powershell
-cd C:\projects\career-copilot
-docker build -t career-copilot-backend ./backend
+Build
+
+```bash
+docker-compose up --build
 ```
 
-Build frontend image:
+Run
 
-```powershell
-cd C:\projects\career-copilot
-docker build -t career-copilot-frontend ./frontend/career-copilot-ui
+```bash
+docker-compose up
 ```
 
-List containers:
+Stop
 
-```powershell
-docker ps
-```
-
-View all containers, including stopped ones:
-
-```powershell
-docker ps -a
-```
-
-View logs:
-
-```powershell
-docker logs <container-name>
-```
-
-Stop and remove a container:
-
-```powershell
-docker rm -f <container-name>
-```
-
-## Docker Compose Commands
-
-Start the full application:
-
-```powershell
-cd C:\projects\career-copilot
-docker-compose up -d
-```
-
-Start and rebuild images:
-
-```powershell
-docker-compose up -d --build
-```
-
-Stop the application:
-
-```powershell
+```bash
 docker-compose down
 ```
 
-Stop the application and remove volumes:
+Remove Volumes
 
-```powershell
+```bash
 docker-compose down -v
 ```
 
-Check service status:
+---
 
-```powershell
-docker-compose ps
-```
+# 🌐 Application URLs
 
-View logs for all services:
+| Service    | URL                   |
+| ---------- | --------------------- |
+| Frontend   | http://localhost:4200 |
+| Backend    | http://localhost:8080 |
+| PostgreSQL | localhost:5432        |
 
-```powershell
-docker-compose logs -f
-```
+---
 
-View logs for one service:
-
-```powershell
-docker-compose logs -f backend
-docker-compose logs -f frontend
-docker-compose logs -f postgres
-```
-
-Validate Compose configuration:
-
-```powershell
-docker-compose config
-```
-
-## Application URLs
-
-Frontend:
+# 🔄 Application Workflow
 
 ```text
-http://localhost:4200
+User
+
+↓
+
+Upload Resume
+
+↓
+
+Paste Job Description
+
+↓
+
+Resume Parsing
+
+↓
+
+Gemini AI
+
+↓
+
+ATS Analysis
+
+↓
+
+Resume Optimization
+
+↓
+
+Optimized Resume
+
+↓
+
+Download PDF / DOCX
 ```
 
-Backend:
+---
+
+# 🔐 Authentication Flow
 
 ```text
-http://localhost:8080
+Register
+
+↓
+
+Login
+
+↓
+
+JWT Generated
+
+↓
+
+Protected APIs
+
+↓
+
+Dashboard
 ```
 
-PostgreSQL:
+---
 
-```text
-localhost:5432
+# 📂 Persistent Storage
+
+Docker Volumes
+
+```
+career_copilot_data
+career_copilot_uploads
 ```
 
-Inside Docker, the backend connects to PostgreSQL using:
+---
 
-```text
-postgres:5432
-```
+# 📋 Roadmap
 
-## Persistent Data
+## ✅ Completed
 
-Docker Compose uses named volumes:
+* Spring Boot Backend
+* Angular Frontend
+* JWT Authentication
+* Resume Upload
+* Resume Parsing
+* AI Resume Optimization
+* ATS Keyword Analysis
+* Docker Support
 
-```text
-career_copilot_data      PostgreSQL database files
-career_copilot_uploads   Uploaded resume files
-```
+---
 
-Database data remains available after:
+## 🚧 In Progress
 
-```powershell
-docker-compose down
-```
+* Resume Download (PDF)
+* Resume Download (DOCX)
+* Job Match %
+* ATS Score
+* Resume History
+* Dashboard Analytics
 
-Database data is deleted only if you run:
+---
 
-```powershell
-docker-compose down -v
-```
+## 🔮 Planned
 
-## Troubleshooting
+* Cover Letter Generator
+* LinkedIn Profile Optimizer
+* Mock Interview AI
+* Resume Templates
+* AI Career Coach
+* Multi-language Resume Support
+* Email Resume Assistant
 
-### No configuration file provided
+---
 
-Error:
+# 🤝 Contributing
 
-```text
-no configuration file provided: not found
-```
+Contributions, feature requests, and suggestions are welcome.
 
-Fix: run Docker Compose from the project root:
+Feel free to fork the repository and submit a pull request.
 
-```powershell
-cd C:\projects\career-copilot
-docker-compose up -d
-```
+---
 
-### Container name already in use
+# 👩‍💻 About the Creator
 
-Error:
+**Sreelekha Khanderao**
 
-```text
-Conflict. The container name "/career-copilot-postgres" is already in use
-```
+Software Engineer passionate about Java, Spring Boot, Angular, AI, and building products that solve real-world problems.
 
-Fix:
+Career Copilot was created after observing that many candidates apply for hundreds of jobs using the same resume, resulting in ATS rejection.
 
-```powershell
-docker rm -f career-copilot-postgres
-docker-compose up -d
-```
+The vision of Career Copilot is to help every candidate tailor their resume within minutes using AI and improve their chances of landing interviews.
 
-### Port already in use
+---
 
-If `4200`, `8080`, or `5432` is already used, find the running container:
+# 📬 Contact
 
-```powershell
-docker ps
-```
+📧 Email
 
-Stop the conflicting container:
+[sreelekhakhanderao@gmail.com](mailto:sreelekhakhanderao@gmail.com)
 
-```powershell
-docker rm -f <container-name>
-```
+---
 
-Then restart:
+# ⭐ Support
 
-```powershell
-docker-compose up -d
-```
+If you found this project useful, consider giving it a **⭐ Star** on GitHub.
 
-### Docker config access warning
+It motivates me to build more open-source AI projects.
 
-Warning:
+---
 
-```text
-Error loading config file: open C:\Users\sreel\.docker\config.json: Access is denied
-```
+## 📄 License
 
-This warning is separate from the application. Docker can still parse the Compose file, but Docker Desktop may have a local permissions issue. Restart Docker Desktop and run the terminal as your normal user.
-
-### Backend cannot connect to database
-
-Check PostgreSQL status:
-
-```powershell
-docker-compose ps
-docker-compose logs -f postgres
-```
-
-The backend must use this URL inside Docker:
-
-```text
-jdbc:postgresql://postgres:5432/career_copilot?options=-c%20TimeZone=UTC
-```
-
-### AI analysis fails
-
-Check that `GEMINI_API_KEY` is set before starting containers:
-
-```powershell
-$env:GEMINI_API_KEY="your-gemini-api-key"
-docker-compose up -d --build
-```
-
-Then inspect backend logs:
-
-```powershell
-docker-compose logs -f backend
-```
-
-### Frontend loads but API calls fail
-
-Confirm the backend is running:
-
-```powershell
-docker-compose ps
-```
-
-Test backend status:
-
-```powershell
-curl http://localhost:8080/api/status
-```
-
-If authentication-protected endpoints return `401`, login again from the frontend so Angular stores a fresh JWT.
-
-## Clean Rebuild
-
-Use this when Docker cache or old containers are causing confusion:
-
-```powershell
-cd C:\projects\career-copilot
-docker-compose down
-docker-compose up -d --build
-```
-
-For a full reset including database and uploads:
-
-```powershell
-docker-compose down -v
-docker-compose up -d --build
-```
+This project is licensed under the MIT License.

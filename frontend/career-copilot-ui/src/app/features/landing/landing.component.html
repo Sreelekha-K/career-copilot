@@ -1,0 +1,342 @@
+<main class="landing-page">
+  <nav class="navbar" aria-label="Primary navigation">
+    <a class="brand" href="#top" aria-label="Career Copilot home">
+      <img class="brand-logo" src="assets/career-copilot-logo.png" alt="Career Copilot">
+    </a>
+
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </div>
+
+    <div class="nav-actions">
+      <a class="button secondary" routerLink="/login">Login</a>
+      <a class="button primary" routerLink="/register">Register</a>
+    </div>
+  </nav>
+
+  <section id="top" class="hero section">
+    <div class="hero-copy">
+      <p class="eyebrow">AI resume optimization platform</p>
+      <h1>Land More Interviews. Not More Rejections.</h1>
+      <p class="hero-subtitle">
+        Optimize every resume for every job using AI. Upload your resume, paste a job description,
+        and get ATS-ready insights in under 2 minutes.
+      </p>
+      <div class="hero-actions">
+        <a class="button primary large" routerLink="/register">Try Free</a>
+        <a class="button secondary large" href="#demo">Watch Demo</a>
+      </div>
+    </div>
+
+    <div class="hero-visual" aria-label="Resume to AI to optimized resume illustration">
+      <div class="flow-card resume-card">
+        <span class="flow-icon">CV</span>
+        <strong>Resume</strong>
+        <small>Skills, projects, education</small>
+      </div>
+      <span class="flow-arrow" aria-hidden="true">↓</span>
+      <div class="flow-card ai-card">
+        <span class="flow-icon">AI</span>
+        <strong>Career Copilot</strong>
+        <small>Keyword and ATS analysis</small>
+      </div>
+      <span class="flow-arrow" aria-hidden="true">↓</span>
+      <div class="flow-card optimized-card">
+        <span class="flow-icon">OK</span>
+        <strong>Optimized Resume</strong>
+        <small>Ready for the role</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust-strip" aria-label="Career Copilot metrics">
+    @for (stat of stats; track stat.label) {
+      <article>
+        <strong>{{ stat.value }}</strong>
+        <span>{{ stat.label }}</span>
+      </article>
+    }
+  </section>
+
+  <section id="how-it-works" class="section">
+    <div class="section-heading">
+      <p class="eyebrow">How it works</p>
+      <h2>From generic resume to job-specific strategy.</h2>
+    </div>
+
+    <div class="steps-grid">
+      @for (step of steps; track step.title) {
+        <article class="glass-card step-card">
+          <span class="step-number">{{ step.number }}</span>
+          <span class="card-icon">{{ step.icon }}</span>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.text }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section id="features" class="section">
+    <div class="section-heading">
+      <p class="eyebrow">Why Career Copilot</p>
+      <h2>Built for candidates who want interviews, not guesswork.</h2>
+    </div>
+
+    <div class="features-grid">
+      @for (feature of features; track feature.title) {
+        <article class="glass-card feature-card">
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.text }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section id="demo" class="section demo-section">
+    <div class="section-heading">
+      <p class="eyebrow">Live demo</p>
+      <h2>Try the flow before creating an account.</h2>
+    </div>
+
+    <article class="demo-card">
+      <div class="demo-grid">
+        <label class="upload-preview" [class.has-file]="selectedDemoFile">
+          <span class="upload-badge">PDF / DOCX</span>
+          <h3>Upload Resume</h3>
+          <p>{{ selectedDemoFile ? selectedDemoFile.name : 'Choose your resume to start the preview.' }}</p>
+          <small>Anonymous uploads are automatically deleted after analysis.</small>
+          <input class="file-input" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" (change)="onDemoFileSelected($event)">
+        </label>
+
+        <label class="jd-preview">
+          <span>Paste Job Description</span>
+          <textarea [value]="jobDescription" (input)="onJobDescriptionInput($event)" placeholder="Paste the role requirements, skills, and responsibilities here."></textarea>
+        </label>
+      </div>
+
+      @if (demoError) {
+        <p class="demo-error">{{ demoError }}</p>
+      }
+
+      <div class="demo-actions">
+        <button class="button primary analyze-button" type="button" (click)="runDemo()" [disabled]="demoState === 'loading'">
+          {{ demoState === 'loading' ? loadingSteps[loadingStepIndex] : 'Analyze Resume' }}
+        </button>
+        <button class="button secondary" type="button" (click)="clearDemo()" [disabled]="demoState === 'loading'">Clear</button>
+      </div>
+
+      @if (demoState === 'loading') {
+        <div class="demo-progress">
+          <span></span>
+          <p>{{ loadingSteps[loadingStepIndex] }}</p>
+          <div class="skeleton-list" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+          </div>
+        </div>
+      }
+
+      @if (demoState === 'ready' && preview) {
+        <div class="preview-card">
+          <div class="preview-heading">
+            <div>
+              <p class="eyebrow">Anonymous AI preview</p>
+              <h3>Optimized Resume Preview</h3>
+            </div>
+            <div class="preview-actions">
+              <button class="button secondary" type="button" (click)="copyPreview()">Copy</button>
+              <button class="button secondary locked" type="button" (click)="openPremiumModal()">Download PDF</button>
+              <button class="button secondary locked" type="button" (click)="openPremiumModal()">Download DOCX</button>
+            </div>
+          </div>
+
+          <div class="preview-grid">
+            <section class="preview-section summary-section">
+              <h4>Professional Summary</h4>
+              <p>{{ preview.professionalSummary }}</p>
+            </section>
+
+            <section class="preview-section">
+              <h4>Improved Skills</h4>
+              <div class="keyword-row">
+                @for (skill of preview.improvedSkills; track skill) {
+                  <span>{{ skill }}</span>
+                }
+              </div>
+            </section>
+
+            <section class="preview-section">
+              <h4>Improved Experience</h4>
+              <ul>
+                @for (bullet of preview.improvedExperienceBullets; track bullet) {
+                  <li>{{ bullet }}</li>
+                }
+              </ul>
+            </section>
+
+            <section class="preview-section">
+              <h4>Recommended ATS Keywords</h4>
+              <div class="keyword-row">
+                @for (keyword of preview.atsKeywords; track keyword) {
+                  <span>{{ keyword }}</span>
+                }
+              </div>
+            </section>
+
+            <section class="preview-section summary-section">
+              <h4>Quick Suggestions</h4>
+              <ul>
+                @for (suggestion of preview.quickSuggestions; track suggestion) {
+                  <li>{{ suggestion }}</li>
+                }
+              </ul>
+            </section>
+          </div>
+        </div>
+      }
+
+      @if (showPremiumModal) {
+        <div class="modal-backdrop" role="presentation" (click)="closePremiumModal()">
+          <div class="premium-modal" role="dialog" aria-modal="true" aria-labelledby="premium-title" (click)="$event.stopPropagation()">
+            <button class="modal-close" type="button" aria-label="Close modal" (click)="closePremiumModal()">x</button>
+            <p class="eyebrow">Premium features</p>
+            <h3 id="premium-title">Unlock Premium Features</h3>
+            <p>Create a free Career Copilot account to unlock:</p>
+            <div class="premium-list">
+              <span>Download PDF</span>
+              <span>Download DOCX</span>
+              <span>ATS Score</span>
+              <span>Resume Match %</span>
+              <span>Missing Keywords</span>
+              <span>Resume History</span>
+              <span>Future Resume Management</span>
+            </div>
+            <a class="button primary" routerLink="/register">Register Free</a>
+            <a class="button secondary" routerLink="/login">Already have an account? Login</a>
+          </div>
+        </div>
+      }
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-heading">
+      <p class="eyebrow">Candidate feedback</p>
+      <h2>Simple, focused, and built around real application pain.</h2>
+    </div>
+
+    <div class="testimonial-grid">
+      @for (testimonial of testimonials; track testimonial.name) {
+        <article class="glass-card testimonial-card">
+          <div class="avatar">{{ testimonial.initials }}</div>
+          <span class="stars" aria-label="5 star rating">★★★★★</span>
+          <p>"{{ testimonial.quote }}"</p>
+          <strong>{{ testimonial.name }}</strong>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="section faq-section">
+    <div class="section-heading">
+      <p class="eyebrow">FAQ</p>
+      <h2>Answers before you start optimizing.</h2>
+    </div>
+
+    <div class="faq-list">
+      @for (faq of faqs; track faq.question) {
+        <article class="glass-card faq-card">
+          <h3>{{ faq.question }}</h3>
+          <p>{{ faq.answer }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section id="about" class="section about-section">
+    <article class="about-card">
+      <div>
+        <p class="eyebrow">About the creator</p>
+        <h2>Hi, I'm Sreelekha Khanderao.</h2>
+        <p>
+          I'm a Software Engineer passionate about Java, Spring Boot, Angular, AI, and building
+          products that solve real-world problems.
+        </p>
+        <p>
+          Career Copilot was created to solve one of the biggest challenges faced by job seekers:
+          using the same resume for every application. Instead of manually rewriting resumes each
+          time, users can upload a resume, paste a job description, and receive optimized resume
+          guidance with ATS insights within minutes.
+        </p>
+        <div class="social-row">
+          <a href="https://github.com/Sreelekha-K" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://www.linkedin.com/in/sreelekha-khanderao/" target="_blank" rel="noreferrer">LinkedIn</a>
+        </div>
+      </div>
+
+      <div class="tech-card">
+        <h3>Tech Stack</h3>
+        <div class="tech-tags">
+          @for (tech of techStack; track tech) {
+            <span>{{ tech }}</span>
+          }
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section id="contact" class="section contact-section">
+    <div class="section-heading">
+      <p class="eyebrow">Contact</p>
+      <h2>Get In Touch</h2>
+      <p>Have feedback, suggestions, or collaboration ideas? I'd love to hear from you.</p>
+    </div>
+
+    <div class="contact-grid">
+      <article class="glass-card contact-card">
+        <h3>Connect</h3>
+        <a href="mailto:sreelekhakhanderao@gmail.com">sreelekhakhanderao@gmail.com</a>
+        <a href="https://github.com/Sreelekha-K" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://www.linkedin.com/in/sreelekha-khanderao/" target="_blank" rel="noreferrer">LinkedIn</a>
+      </article>
+
+      <form class="glass-card contact-form" (submit)="submitContact($event)">
+        <label>
+          <span>Name</span>
+          <input type="text" placeholder="Your name">
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" placeholder="you@example.com">
+        </label>
+        <label>
+          <span>Message</span>
+          <textarea placeholder="Tell me about your feedback or idea."></textarea>
+        </label>
+        <button class="button primary" type="submit">Send Message</button>
+        @if (contactSent) {
+          <p class="success-message">Message captured. Contact backend integration is coming soon.</p>
+        }
+      </form>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div>
+      <strong>Career Copilot</strong>
+      <p>AI resume optimization for software engineers.</p>
+    </div>
+    <div class="footer-links">
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <a href="#top">Privacy Policy</a>
+      <a href="#top">Terms</a>
+    </div>
+    <p>Built with care by Sreelekha Khanderao.</p>
+  </footer>
+</main>

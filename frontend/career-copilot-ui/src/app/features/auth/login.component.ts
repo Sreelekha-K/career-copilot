@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { ErrorService } from '../../core/errors/error.service';
 
 @Component({
   selector: 'app-login',
@@ -14,25 +15,36 @@ export class LoginComponent {
   password = '';
   errorMessage = '';
   isSubmitting = false;
+  showPassword = false;
+  fieldErrors = {
+    email: '',
+    password: ''
+  };
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private errorService: ErrorService
   ) {}
 
   onEmailInput(event: Event): void {
     this.email = (event.target as HTMLInputElement).value;
+    this.fieldErrors.email = '';
   }
 
   onPasswordInput(event: Event): void {
     this.password = (event.target as HTMLInputElement).value;
+    this.fieldErrors.password = '';
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   login(): void {
     this.errorMessage = '';
 
-    if (!this.email.trim() || !this.password.trim()) {
-      this.errorMessage = 'Please enter your email and password.';
+    if (!this.validateForm()) {
       return;
     }
 
@@ -47,10 +59,50 @@ export class LoginComponent {
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
-        console.error(error);
-        this.errorMessage = error?.error?.message || 'Login failed. Please check your credentials.';
+        this.applyBackendErrors(error, 'Unable to login right now.');
         this.isSubmitting = false;
       }
     });
+  }
+
+  private applyBackendErrors(error: unknown, fallbackMessage: string): void {
+    const appError = this.errorService.toAppError(error);
+    const fieldErrors = appError.fieldErrors;
+
+    if (Object.keys(fieldErrors).length > 0) {
+      this.fieldErrors = {
+        email: fieldErrors['email'] || '',
+        password: fieldErrors['password'] || ''
+      };
+    }
+
+    this.errorMessage = appError.status === 0
+      ? fallbackMessage
+      : appError.message || fallbackMessage;
+  }
+
+  private validateForm(): boolean {
+    this.fieldErrors = {
+      email: this.validateEmail(this.email),
+      password: this.validatePassword(this.password)
+    };
+
+    return !this.fieldErrors.email && !this.fieldErrors.password;
+  }
+
+  private validateEmail(email: string): string {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      return 'Email is required.';
+    }
+
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
+      ? ''
+      : 'Please enter a valid email address.';
+  }
+
+  private validatePassword(password: string): string {
+    return password ? '' : 'Password is required.';
   }
 }

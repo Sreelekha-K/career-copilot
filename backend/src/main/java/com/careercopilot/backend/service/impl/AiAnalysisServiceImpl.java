@@ -1,5 +1,6 @@
 package com.careercopilot.backend.service.impl;
 
+import com.careercopilot.backend.dto.AnonymousAnalysisPreviewDto;
 import com.careercopilot.backend.dto.JobAnalysisResponseDto;
 import com.careercopilot.backend.entity.ResumeEntity;
 import com.careercopilot.backend.exception.AiAnalysisException;
@@ -20,6 +21,7 @@ import java.util.Map;
 public class AiAnalysisServiceImpl implements AiAnalysisService {
 
     private static final int MAX_RESUME_CHARS = 14000;
+    private static final int MAX_ANONYMOUS_RESUME_CHARS = 6000;
     private static final int[] GEMINI_RETRY_DELAYS_MS = {2000, 5000, 10000};
     private static final String GEMINI_BUSY_MESSAGE = "Gemini is temporarily busy. Please try again in a minute.";
     private static final String GEMINI_API_URL =
@@ -71,6 +73,36 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
         }
     }
 
+    @Override
+    public AnonymousAnalysisPreviewDto analyzeAnonymousPreview(String resumeText, String fileName, String jobDescription) {
+
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new AiAnalysisException("Gemini API key is not configured. Set GEMINI_API_KEY in the environment.");
+        }
+
+        try {
+            Map<String, Object> requestBody = buildAnonymousGeminiRequest(resumeText, fileName, jobDescription);
+            JsonNode response = sendGeminiRequestWithRetry(requestBody);
+            String responseText = extractGeminiText(response);
+            String json = stripJsonFences(responseText);
+
+            return objectMapper.readValue(json, AnonymousAnalysisPreviewDto.class);
+
+        } catch (JsonProcessingException ex) {
+            System.err.println("Gemini anonymous preview response could not be parsed.");
+            System.err.println("Gemini parse error class: " + ex.getClass().getName());
+            System.err.println("Gemini parse error message: " + ex.getMessage());
+            throw new AiAnalysisException("Gemini returned an invalid preview format", ex);
+        } catch (AiAnalysisException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            System.err.println("Gemini anonymous preview request failed.");
+            System.err.println("Gemini error class: " + ex.getClass().getName());
+            System.err.println("Gemini error message: " + ex.getMessage());
+            throw new AiAnalysisException("Failed to generate resume preview. Please try again.", ex);
+        }
+    }
+
     private Map<String, Object> buildGeminiRequest(ResumeEntity resume, String jobDescription) {
 
         return Map.of(
@@ -79,6 +111,24 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
                                 "role", "user",
                                 "parts", List.of(
                                         Map.of("text", buildPrompt(resume, jobDescription))
+                                )
+                        )
+                ),
+                "generationConfig", Map.of(
+                        "temperature", 0.2,
+                        "responseMimeType", "application/json"
+                )
+        );
+    }
+
+    private Map<String, Object> buildAnonymousGeminiRequest(String resumeText, String fileName, String jobDescription) {
+
+        return Map.of(
+                "contents", List.of(
+                        Map.of(
+                                "role", "user",
+                                "parts", List.of(
+                                        Map.of("text", buildAnonymousPrompt(resumeText, fileName, jobDescription))
                                 )
                         )
                 ),
@@ -212,6 +262,54 @@ public class AiAnalysisServiceImpl implements AiAnalysisService {
                 safe(resume.getFileType()),
                 resume.getFileSize() == null ? "unknown" : resume.getFileSize(),
                 resumeText,
+                safe(jobDescription)
+        );
+    }
+
+    private String buildAnonymousPrompt(String resumeText, String fileName, String jobDescription) {
+
+        String safeResumeText = safe(resumeText);
+
+        if (safeResumeText.isBlank()) {
+            throw new AiAnalysisException("Could not extract readable text from this resume. Please upload a text-based PDF or DOCX.");
+        }
+
+        safeResumeText = truncate(safeResumeText, MAX_ANONYMOUS_RESUME_CHARS);
+
+        return """
+                You are Career Copilot, an AI resume optimizer for software engineers.
+
+                Return JSON only. Do not include markdown, prose, explanations, or code fences.
+
+                Required JSON structure:
+                {
+                  "professionalSummary": "",
+                  "improvedSkills": [],
+                  "improvedExperienceBullets": [],
+                  "atsKeywords": [],
+                  "quickSuggestions": []
+                }
+
+                Anonymous preview rules:
+                - Keep the total output around 300 to 400 words.
+                - Do not generate a full resume.
+                - Generate only a concise optimized professional summary, improved skills section, 3 to 5 improved experience bullets, ATS keywords, and quick suggestions.
+                - Use only the user's real resume content.
+                - Do not invent fake experience, projects, companies, metrics, education, or skills.
+                - If the job description asks for a missing skill, mention it only in quickSuggestions or atsKeywords, not as existing experience.
+                - Make the preview specific, useful, and frontend-friendly.
+
+                Resume file name:
+                %s
+
+                Resume content:
+                %s
+
+                Job description:
+                %s
+                """.formatted(
+                safe(fileName),
+                safeResumeText,
                 safe(jobDescription)
         );
     }

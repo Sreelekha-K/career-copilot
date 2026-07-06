@@ -4,11 +4,14 @@ import com.careercopilot.backend.dto.AuthRequestDto;
 import com.careercopilot.backend.dto.AuthResponseDto;
 import com.careercopilot.backend.dto.RegisterRequestDto;
 import com.careercopilot.backend.entity.User;
-import com.careercopilot.backend.exception.AuthException;
+import com.careercopilot.backend.entity.UserRole;
+import com.careercopilot.backend.exception.DuplicateEmailException;
 import com.careercopilot.backend.repository.UserRepository;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,13 +39,14 @@ public class UserService implements UserDetailsService {
         String email = normalizeEmail(request.getEmail());
 
         if (userRepository.existsByEmail(email)) {
-            throw new AuthException("Email is already registered");
+            throw new DuplicateEmailException("Email is already registered.");
         }
 
         User user = new User();
         user.setName(request.getName().trim());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(UserRole.USER);
         user.setCreatedAt(LocalDateTime.now());
 
         User savedUser = userRepository.save(user);
@@ -56,10 +60,10 @@ public class UserService implements UserDetailsService {
         String email = normalizeEmail(request.getEmail());
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthException("Invalid email or password"));
+                .orElseThrow(() -> new UsernameNotFoundException("Account not found."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new AuthException("Invalid email or password");
+            throw new BadCredentialsException("Incorrect email or password.");
         }
 
         String token = jwtService.generateToken(user);
@@ -76,8 +80,24 @@ public class UserService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
-                .authorities("ROLE_USER")
+                .authorities("ROLE_" + getEffectiveRole(user).name())
                 .build();
+    }
+
+    public User getCurrentUser() {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return userRepository.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new UsernameNotFoundException("Authenticated user not found"));
+    }
+
+    public boolean isAdmin(User user) {
+        return getEffectiveRole(user) == UserRole.ADMIN;
+    }
+
+    private UserRole getEffectiveRole(User user) {
+        return user.getRole() == null ? UserRole.USER : user.getRole();
     }
 
     private String normalizeEmail(String email) {

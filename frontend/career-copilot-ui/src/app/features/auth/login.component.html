@@ -7,21 +7,37 @@
 
   <section class="auth-card">
     <div class="brand-row">
-      <span class="brand-mark">CC</span>
-      <span class="brand-pill">Career Copilot</span>
+      <a class="logo-link" routerLink="/" aria-label="Go to Career Copilot home">
+        <img class="auth-logo" src="assets/career-copilot-logo.png" alt="Career Copilot">
+      </a>
     </div>
-    <h1>Welcome back</h1>
+    <h1>Hello Aspirant</h1>
     <p>Sign in to continue your AI-powered career workspace.</p>
 
     <form class="auth-form" (submit)="$event.preventDefault(); login()">
       <label>
         <span>Email</span>
-        <input type="email" autocomplete="email" [value]="email" (input)="onEmailInput($event)" placeholder="you@example.com">
+        <input type="email" autocomplete="email" [value]="email" (input)="onEmailInput($event)" placeholder="you@example.com" [class.invalid]="fieldErrors.email">
+        @if (fieldErrors.email) {
+          <small class="field-error">{{ fieldErrors.email }}</small>
+        }
       </label>
 
       <label>
         <span>Password</span>
-        <input type="password" autocomplete="current-password" [value]="password" (input)="onPasswordInput($event)" placeholder="Your password">
+        <div class="password-field">
+          <input [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" [value]="password" (input)="onPasswordInput($event)" placeholder="Your password" [class.invalid]="fieldErrors.password">
+          <button class="eye-button" type="button" (click)="togglePasswordVisibility()" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+              <circle cx="12" cy="12" r="2.8"></circle>
+            </svg>
+          </button>
+        </div>
+        @if (fieldErrors.password) {
+          <small class="field-error">{{ fieldErrors.password }}</small>
+        }
+        <a class="forgot-link" routerLink="/forgot-password">Forgot password?</a>
       </label>
 
       @if (errorMessage) {
@@ -29,7 +45,12 @@
       }
 
       <button type="submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Signing in...' : 'Login' }}
+        @if (isSubmitting) {
+          <span class="button-spinner" aria-hidden="true"></span>
+          Signing In...
+        } @else {
+          Login
+        }
       </button>
     </form>
 

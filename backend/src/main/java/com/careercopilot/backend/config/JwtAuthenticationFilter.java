@@ -19,12 +19,19 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String ANONYMOUS_PREVIEW_PATH = "/api/job-analysis/anonymous-preview";
+
     private final JwtService jwtService;
     private final UserService userService;
 
     public JwtAuthenticationFilter(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        return ANONYMOUS_PREVIEW_PATH.equals(request.getServletPath());
     }
 
     @Override

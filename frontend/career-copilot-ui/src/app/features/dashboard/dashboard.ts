@@ -1,8 +1,9 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { AnalysisStateService } from '../../core/services/analysis-state.service';
 import { Api, JobAnalysisResponse, Resume } from '../../core/services/api';
+import { ErrorService } from '../../core/errors/error.service';
 
 type DashboardSection =
   | 'dashboard'
@@ -14,6 +15,7 @@ type DashboardSection =
 
 @Component({
   selector: 'app-dashboard',
+  imports: [RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
@@ -22,6 +24,7 @@ export class DashboardComponent implements OnInit {
   backendStatus = 'Checking backend connection...';
   selectedFile: File | null = null;
   uploadMessage = '';
+  uploadError = '';
   resumes: Resume[] = [];
   isLoadingResumes = false;
   resumeError = '';
@@ -46,6 +49,7 @@ export class DashboardComponent implements OnInit {
     private apiService: Api,
     private authService: AuthService,
     private analysisStateService: AnalysisStateService,
+    private errorService: ErrorService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -60,7 +64,7 @@ export class DashboardComponent implements OnInit {
   }
 
   get welcomeMessage(): string {
-    return this.userName ? `Welcome back, ${this.userName}` : 'Welcome back';
+    return this.userName ? `Hello, ${this.userName}` : 'Hello';
   }
 
   get latestMatchScore(): string {
@@ -135,20 +139,24 @@ export class DashboardComponent implements OnInit {
 
   uploadResume(): void {
     if (!this.selectedFile) {
-      this.uploadMessage = 'Please select a file first';
+      this.uploadMessage = '';
+      this.uploadError = 'Please select a file first.';
       return;
     }
+
+    this.uploadError = '';
 
     this.apiService.uploadResume(this.selectedFile).subscribe({
       next: (response) => {
         this.uploadMessage = 'Resume uploaded successfully: ' + response.fileName;
+        this.uploadError = '';
         this.selectedFile = null;
         this.loadResumes();
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error(error);
-        this.uploadMessage = 'Resume upload failed';
+        this.uploadMessage = '';
+        this.uploadError = this.getFriendlyErrorMessage(error, 'Resume upload failed. Please try again.');
         this.cdr.detectChanges();
       }
     });
@@ -170,8 +178,7 @@ export class DashboardComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error(error);
-        this.resumeError = 'Could not load resumes';
+        this.resumeError = this.getFriendlyErrorMessage(error, 'Could not load resumes');
         this.isLoadingResumes = false;
         this.cdr.detectChanges();
       }
@@ -202,8 +209,7 @@ export class DashboardComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error(error);
-        this.resumeError = 'Could not delete resume';
+        this.resumeError = this.getFriendlyErrorMessage(error, 'Could not delete resume');
         this.deletingResumeId = null;
         this.cdr.detectChanges();
       }
@@ -246,11 +252,7 @@ export class DashboardComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error(error);
-        const backendMessage = error?.error?.message;
-        this.analysisError = backendMessage === 'Gemini is temporarily busy. Please try again in a minute.'
-          ? 'AI service is busy right now. Please try again shortly.'
-          : backendMessage || 'Could not analyze resume match';
+        this.analysisError = this.getFriendlyErrorMessage(error, 'Could not analyze resume match');
         this.isAnalyzing = false;
         this.cdr.detectChanges();
       }
@@ -290,5 +292,9 @@ export class DashboardComponent implements OnInit {
     const sectionExists = this.sections.some((section) => section.id === path);
 
     this.activeSection = sectionExists && path ? path : 'dashboard';
+  }
+
+  private getFriendlyErrorMessage(error: any, fallbackMessage: string): string {
+    return this.errorService.toAppError(error).message || fallbackMessage;
   }
 }

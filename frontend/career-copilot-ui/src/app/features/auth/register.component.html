@@ -7,8 +7,9 @@
 
   <section class="auth-card">
     <div class="brand-row">
-      <span class="brand-mark">CC</span>
-      <span class="brand-pill">Career Copilot</span>
+      <a class="logo-link" routerLink="/" aria-label="Go to Career Copilot home">
+        <img class="auth-logo" src="assets/career-copilot-logo.png" alt="Career Copilot">
+      </a>
     </div>
     <h1>Create your account</h1>
     <p>Start managing resumes, job matches, roadmaps, and interview prep.</p>
@@ -16,17 +17,50 @@
     <form class="auth-form" (submit)="$event.preventDefault(); register()">
       <label>
         <span>Name</span>
-        <input type="text" autocomplete="name" [value]="name" (input)="onNameInput($event)" placeholder="Your name">
+        <input type="text" autocomplete="name" [value]="name" (input)="onNameInput($event)" placeholder="Your name" [class.invalid]="fieldErrors.name">
+        @if (fieldErrors.name) {
+          <small class="field-error">{{ fieldErrors.name }}</small>
+        }
       </label>
 
       <label>
         <span>Email</span>
-        <input type="email" autocomplete="email" [value]="email" (input)="onEmailInput($event)" placeholder="you@example.com">
+        <input type="email" autocomplete="email" [value]="email" (input)="onEmailInput($event)" placeholder="you@example.com" [class.invalid]="fieldErrors.email">
+        @if (fieldErrors.email) {
+          <small class="field-error">{{ fieldErrors.email }}</small>
+        }
       </label>
 
       <label>
         <span>Password</span>
-        <input type="password" autocomplete="new-password" [value]="password" (input)="onPasswordInput($event)" placeholder="Create a password">
+        <div class="password-field">
+          <input [type]="showPassword ? 'text' : 'password'" autocomplete="new-password" [value]="password" (input)="onPasswordInput($event)" placeholder="Create a password" [class.invalid]="fieldErrors.password">
+          <button class="eye-button" type="button" (click)="togglePasswordVisibility()" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+              <circle cx="12" cy="12" r="2.8"></circle>
+            </svg>
+          </button>
+        </div>
+        @if (fieldErrors.password) {
+          <small class="field-error">{{ fieldErrors.password }}</small>
+        }
+      </label>
+
+      <label>
+        <span>Confirm password</span>
+        <div class="password-field">
+          <input [type]="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" [value]="confirmPassword" (input)="onConfirmPasswordInput($event)" placeholder="Confirm your password" [class.invalid]="fieldErrors.confirmPassword">
+          <button class="eye-button" type="button" (click)="toggleConfirmPasswordVisibility()" [attr.aria-label]="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+              <circle cx="12" cy="12" r="2.8"></circle>
+            </svg>
+          </button>
+        </div>
+        @if (fieldErrors.confirmPassword) {
+          <small class="field-error">{{ fieldErrors.confirmPassword }}</small>
+        }
       </label>
 
       @if (errorMessage) {
@@ -34,7 +68,12 @@
       }
 
       <button type="submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Creating account...' : 'Register' }}
+        @if (isSubmitting) {
+          <span class="button-spinner" aria-hidden="true"></span>
+          Creating Account...
+        } @else {
+          Register
+        }
       </button>
     </form>
 

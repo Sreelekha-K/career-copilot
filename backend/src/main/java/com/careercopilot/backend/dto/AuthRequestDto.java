@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class AuthRequestDto {
 
-    @Email(message = "Email must be valid")
+    @Email(message = "Please enter a valid email address.")
     @NotBlank(message = "Email is required")
     private String email;
 

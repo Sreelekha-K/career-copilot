@@ -3,16 +3,19 @@ package com.careercopilot.backend.service.impl;
 import com.careercopilot.backend.dto.ResumeRequestDto;
 import com.careercopilot.backend.dto.ResumeResponseDto;
 import com.careercopilot.backend.entity.ResumeEntity;
+import com.careercopilot.backend.entity.User;
 import com.careercopilot.backend.exception.ResourceNotFoundException;
 import com.careercopilot.backend.exception.ResumeProcessingException;
 import com.careercopilot.backend.repository.ResumeRepository;
 import com.careercopilot.backend.service.ResumeService;
+import com.careercopilot.backend.service.UserService;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -33,10 +36,12 @@ public class ResumeServiceImpl implements ResumeService {
     private static final String DEFAULT_UPLOAD_DIR = "C:/projects/career-copilot/uploads/resumes";
 
     private final ResumeRepository resumeRepository;
+    private final UserService userService;
     private final Path uploadDir;
 
-    public ResumeServiceImpl(ResumeRepository resumeRepository) {
+    public ResumeServiceImpl(ResumeRepository resumeRepository, UserService userService) {
         this.resumeRepository = resumeRepository;
+        this.userService = userService;
         this.uploadDir = resolveUploadDir();
     }
 
@@ -48,6 +53,7 @@ public class ResumeServiceImpl implements ResumeService {
         resumeEntity.setFileName(request.getFileName());
         resumeEntity.setFileType(request.getFileType());
         resumeEntity.setUploadedAt(LocalDateTime.now());
+        resumeEntity.setOwner(userService.getCurrentUser());
 
         ResumeEntity savedResume = resumeRepository.save(resumeEntity);
 
@@ -75,6 +81,7 @@ public class ResumeServiceImpl implements ResumeService {
             String resumeText = extractResumeText(filePath, file.getContentType(), originalFileName);
 
             ResumeEntity resumeEntity = new ResumeEntity();
+            resumeEntity.setOwner(userService.getCurrentUser());
             resumeEntity.setFileName(originalFileName);
             resumeEntity.setFileType(file.getContentType());
             resumeEntity.setFileSize(file.getSize());
@@ -95,7 +102,11 @@ public class ResumeServiceImpl implements ResumeService {
     @Override
     public List<ResumeResponseDto> getAllResumes() {
 
-        List<ResumeEntity> resumes = resumeRepository.findAll();
+        User currentUser = userService.getCurrentUser();
+
+        List<ResumeEntity> resumes = userService.isAdmin(currentUser)
+                ? resumeRepository.findAll()
+                : resumeRepository.findByOwnerOrderByUploadedAtDesc(currentUser);
 
         return resumes.stream()
                 .map(this::mapToResponseDto)
@@ -110,6 +121,8 @@ public class ResumeServiceImpl implements ResumeService {
                         new ResourceNotFoundException("Resume not found with id " + id)
                 );
 
+        verifyResumeAccess(resumeEntity);
+
         return mapToResponseDto(resumeEntity);
     }
 
@@ -120,6 +133,8 @@ public class ResumeServiceImpl implements ResumeService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Resume not found with id " + id)
                 );
+
+        verifyResumeAccess(resumeEntity);
 
         try {
             if (resumeEntity.getFilePath() != null) {
@@ -148,6 +163,21 @@ public class ResumeServiceImpl implements ResumeService {
         response.setParsedTextPreview(preview);
 
         return response;
+    }
+
+    private void verifyResumeAccess(ResumeEntity resumeEntity) {
+
+        User currentUser = userService.getCurrentUser();
+
+        if (userService.isAdmin(currentUser)) {
+            return;
+        }
+
+        User owner = resumeEntity.getOwner();
+
+        if (owner == null || !owner.getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You do not have permission to access this resume.");
+        }
     }
 
     private String extractResumeText(Path filePath, String contentType, String originalFileName) throws IOException {

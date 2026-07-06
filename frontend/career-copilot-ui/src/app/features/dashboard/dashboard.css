@@ -43,6 +43,33 @@ button { transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms 
   margin-bottom: 16px;
 }
 
+.dashboard-logo {
+  display: block;
+  width: 74px;
+  height: 50px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  object-position: left center;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(165, 140, 241, 0.2);
+}
+
+.dashboard-logo-link {
+  display: inline-flex;
+  border-radius: 16px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.dashboard-logo-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(165, 140, 241, 0.2);
+}
+
+.dashboard-logo-link:focus-visible {
+  outline: 3px solid rgba(165, 140, 241, 0.34);
+  outline-offset: 3px;
+}
+
 .brand-mark, .upload-icon, .nav-icon, .stat-icon, .heading-icon {
   display: inline-grid;
   place-items: center;

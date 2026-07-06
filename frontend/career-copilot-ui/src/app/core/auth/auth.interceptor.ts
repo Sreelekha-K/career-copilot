@@ -3,6 +3,10 @@ import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
+  if (request.url.includes('/api/job-analysis/anonymous-preview')) {
+    return next(request);
+  }
+
   const token = inject(AuthService).getToken();
 
   if (!token) {

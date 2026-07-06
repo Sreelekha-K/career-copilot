@@ -1,7 +1,9 @@
 <main class="app-shell">
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-mark">CC</span>
+      <a class="dashboard-logo-link" routerLink="/" aria-label="Go to Career Copilot home">
+        <img class="dashboard-logo" src="assets/career-copilot-logo.png" alt="Career Copilot">
+      </a>
       <div>
         <h1>Career Copilot</h1>
         <p>{{ userName ? 'Hello, ' + userName : 'AI career workspace' }}</p>
@@ -105,6 +107,10 @@
 
           @if (uploadMessage) {
             <p class="notice success-notice">{{ uploadMessage }}</p>
+          }
+
+          @if (uploadError) {
+            <p class="notice error-notice">{{ uploadError }}</p>
           }
         </article>
 

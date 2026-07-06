@@ -2,19 +2,25 @@ package com.careercopilot.backend.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequestDto {
 
     @NotBlank(message = "Name is required")
+    @Size(min = 3, max = 50, message = "Name must be between 3 and 50 characters")
     private String name;
 
-    @Email(message = "Email must be valid")
+    @Email(message = "Please enter a valid email address.")
     @NotBlank(message = "Email is required")
     private String email;
 
-    @Size(min = 8, message = "Password must be at least 8 characters")
     @NotBlank(message = "Password is required")
+    @Size(min = 10, message = "Password must be at least 10 characters.")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+$",
+            message = "Password must include uppercase, lowercase, number, and special character."
+    )
     private String password;
 
     public String getName() {

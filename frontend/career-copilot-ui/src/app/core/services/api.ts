@@ -38,6 +38,14 @@ export interface JobAnalysisResponse {
   behavioralQuestions: string[];
 }
 
+export interface AnonymousAnalysisPreview {
+  professionalSummary: string;
+  improvedSkills: string[];
+  improvedExperienceBullets: string[];
+  atsKeywords: string[];
+  quickSuggestions: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -69,5 +77,13 @@ export class Api {
 
   analyzeJobMatch(request: JobAnalysisRequest): Observable<JobAnalysisResponse> {
     return this.http.post<JobAnalysisResponse>(`${this.baseUrl}/api/job-analysis/analyze`, request);
+  }
+
+  analyzeAnonymousPreview(file: File, jobDescription: string): Observable<AnonymousAnalysisPreview> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('jobDescription', jobDescription);
+
+    return this.http.post<AnonymousAnalysisPreview>(`${this.baseUrl}/api/job-analysis/anonymous-preview`, formData);
   }
 }
